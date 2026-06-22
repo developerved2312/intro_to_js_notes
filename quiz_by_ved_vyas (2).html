@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz by Ved Vyas: If-Else, Comparison and Logical Operators</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-6">
+
+    <div id="app" class="max-w-4xl mx-auto">
+        <header class="flex justify-between items-center mb-8 pb-4 border-b border-slate-800">
+            <h1 class="text-2xl font-bold text-blue-400">Quiz </h1>
+            <div id="timer" class="text-xl font-mono text-red-400 font-bold">15:00</div>
+        </header>
+
+        <div id="quiz-container" class="bg-slate-900 p-8 rounded-3xl border border-slate-800 glow">
+            <div id="q-content">
+                <h2 id="q-text" class="text-2xl font-bold mb-4"></h2>
+                <pre id="q-code" class="bg-black p-6 rounded-xl mb-6 text-green-400 font-mono text-sm border border-slate-700 whitespace-pre-wrap"></pre>
+                <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+        </div>
+
+        <div id="dashboard" class="hidden space-y-8">
+            <h2 class="text-3xl font-bold text-center text-blue-400">Performance Dashboard</h2>
+            <div class="bg-slate-900 p-8 rounded-3xl border border-slate-800">
+                <h3 class="text-lg font-semibold mb-6">Performance by Category (%)</h3>
+                <div id="bar-chart" class="flex items-end justify-around h-48 border-b border-slate-700 gap-4 pb-2"></div>
+            </div>
+            <div id="feedback" class="space-y-4"></div>
+            <button onclick="location.reload()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-xl font-bold">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        var questions = [
+            { q: "What will be printed?", code: "var x = 10;\nif(x > 5) {\n  text('Big', 10, 10);\n} else {\n  text('Small', 10, 10);\n}", options: ["Big", "Small", "10", "Error"], correct: 0, cat: "If-Else", exp: "Since 10 is greater than 5, 'Big' is printed." },
+            { q: "Which symbol is used for equality comparison?", code: "if(x ___ 10) { /* logic */ }", options: ["=", "==", "===", "is"], correct: 1, cat: "Comparison", exp: "In basic JS/Processing, == checks for equality." },
+            { q: "What will happen here?", code: "var x = 5;\nif(x === 5) {\n  text('A', 10, 10);\n}", options: ["Prints A", "Prints nothing", "Error", "Infinite loop"], correct: 0, cat: "If-Else", exp: "The condition 5 === 5 is true, so 'A' is printed." },
+            { q: "What is the result of true && false?", code: "if(true && false) { text('A', 10, 10); }", options: ["A", "Nothing", "Error", "True"], correct: 1, cat: "Logical", exp: "AND (&&) requires both sides to be true; it results in false." },
+            { q: "What is the result of true || false?", code: "if(true || false) { text('A', 10, 10); }", options: ["A", "Nothing", "Error", "False"], correct: 0, cat: "Logical", exp: "OR (||) is true if at least one condition is true." },
+            { q: "What does !true evaluate to?", code: "if(!true) { text('A', 10, 10); }", options: ["A", "Nothing", "Error", "True"], correct: 1, cat: "Logical", exp: "NOT (!) flips true to false." },
+            { q: "How to check if mouse is clicked in Processing?", code: "if(_____) { /* action */ }", options: ["mouseIsPressed", "isClicked", "ifMouse", "checkMouse"], correct: 0, cat: "Processing", exp: "mouseIsPressed is the standard variable used in Processing/p5.js." },
+            { q: "Which condition checks if mouse is on the right side?", code: "if(mouseX > width / 2) { /* action */ }", options: ["Right side", "Left side", "Top", "Bottom"], correct: 0, cat: "Processing", exp: "If X is greater than half the width, the mouse is on the right." },
+            { q: "What does (x < 10) mean?", code: "if(x < 10) { /* action */ }", options: ["x is less than 10", "x is more than 10", "x is 10", "x is not 10"], correct: 0, cat: "Comparison", exp: "< means less than." },
+            { q: "What is the outcome of (5 > 2)?", code: "if(5 > 2) { text('Yes', 10, 10); }", options: ["Yes", "No", "Error", "Nothing"], correct: 0, cat: "Comparison", exp: "5 is indeed greater than 2." }
+        ];
+
+        var currentQ = 0;
+        var score = 0;
+        var timer = 900;
+        var quizHistory = [];
+
+        function render() {
+            if(currentQ >= questions.length) return showDashboard();
+            var q = questions[currentQ];
+            document.getElementById('q-text').innerText = "Question " + (currentQ + 1) + " / " + questions.length;
+            document.getElementById('q-code').innerText = q.code + "\n\nQuestion: " + q.q;
+            var container = document.getElementById('options-grid');
+            container.innerHTML = '';
+            q.options.forEach(function(opt, i) {
+                var btn = document.createElement('button');
+                btn.className = "p-4 bg-slate-800 hover:bg-blue-700 rounded-xl border border-slate-700 transition font-medium text-left";
+                btn.innerText = opt;
+                btn.onclick = function() {
+                    quizHistory.push({ q: q.q, correct: i === q.correct, exp: q.exp, cat: q.cat });
+                    if(i === q.correct) score++;
+                    currentQ++;
+                    render();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function showDashboard() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            var cats = ["If-Else", "Comparison", "Logical", "Processing"];
+            var chart = document.getElementById('bar-chart');
+            chart.innerHTML = '';
+            cats.forEach(function(c) {
+                var total = 0, correct = 0;
+                quizHistory.forEach(function(h) { if(h.cat === c) { total++; if(h.correct) correct++; } });
+                var percent = total ? Math.round((correct/total)*100) : 0;
+                chart.innerHTML += '<div class="flex flex-col items-center gap-2"><span class="text-xs">' + percent + '%</span><div style="height: ' + (percent || 5) + 'px;" class="w-16 bg-blue-500 rounded-t-lg transition-all duration-1000"></div><span class="text-xs font-bold">' + c + '</span></div>';
+            });
+            var feedback = document.getElementById('feedback');
+            feedback.innerHTML = '';
+            quizHistory.forEach(function(h) {
+                feedback.innerHTML += '<div class="p-4 ' + (h.correct ? 'bg-green-900/30' : 'bg-red-900/30') + ' rounded-xl border border-slate-700"><p class="font-bold">' + h.q + '</p><p class="text-sm text-slate-300">Explanation: ' + h.exp + '</p></div>';
+            });
+        }
+
+        setInterval(function() { 
+            if(timer > 0) { 
+                timer--; 
+                document.getElementById('timer').innerText = Math.floor(timer/60) + ":" + (timer%60 < 10 ? '0' : '') + (timer%60); 
+            } else if(currentQ < questions.length) { showDashboard(); }
+        }, 1000);
+        render();
+    </script>
+</body>
+</html>
